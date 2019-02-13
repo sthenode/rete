@@ -66,7 +66,9 @@ public:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
-    maint() {
+    maint()
+    : client_message_("GET / HTTP/1.0\r\n\r\n"), 
+      server_message_("HTTP/1.0 200 OK\r\n\r\nOK\r\n") {
     }
     virtual ~maint() {
     }
@@ -84,6 +86,34 @@ protected:
         }
         return default_run(argc, argv, env);
     }
+    virtual int server_run(int argc, char_t** argv, char_t** env) {
+        int err = 0;
+        network::sockets::ip::v4::endpoint ep(8080);
+        network::sockets::ip::tcp::transport tp;
+        network::sockets::os::interface sk;
+
+        if ((sk.open(tp))) {
+
+            if ((sk.bind(ep))) {
+                
+                if ((sk.listen())) {
+                    network::sockets::os::interface cn;
+                    
+                    if ((sk.accept(cn, ep))) {
+                        ssize_t count = 0;
+                        
+                        if (0 < (count = recv_message(message_, cn))) {
+                            this->out(message_.chars());                            
+                            count = cn.send(server_message_.chars(), server_message_.length(), 0);
+                        }
+                        cn.close();
+                    }
+                }
+            }
+            sk.close();
+        }
+        return err;
+    }
     virtual int client_run(int argc, char_t** argv, char_t** env) {
         int err = 0;
         network::sockets::ip::v4::endpoint ep("localhost", 80);
@@ -93,17 +123,12 @@ protected:
         if ((sk.open(tp))) {
 
             if ((sk.connect(ep))) {
-                char_string message("GET / HTTP/1.0\r\n\r\n");
                 ssize_t count = 0;
 
-                if (0 < (count = sk.send(message.chars(), message.length(), 0))) {
-                    char_t c = 0;
-
-                    do {
-                        if (0 < (count = sk.recv(&c, 1, 0))) {
-                            this->out(&c, 1);
-                        }
-                    } while (0 < (count));
+                if (0 < (count = sk.send(client_message_.chars(), client_message_.length(), 0))) {
+                    if (0 < (count = recv_message(message_, sk))) {
+                        this->out(message_.chars());
+                    }
                 }
                 sk.shutdown();
             }
@@ -114,9 +139,43 @@ protected:
     virtual int default_run(int argc, char_t** argv, char_t** env) {
         int err = 0;
         if (!(err = extends::run(argc, argv, env))) {
-            client_run(argc, argv, env);
+            server_run(argc, argv, env);
         }
         return err;
+    }
+    virtual ssize_t recv_message
+    (char_string& message, network::sockets::os::interface& sk) {
+        enum { start, cr, crlf, crlfcr } state = start;
+        ssize_t amount = 0, count = 0;
+        char_t c = 0;
+
+        message.clear();
+        do {
+            if (0 < (amount = sk.recv(&c, 1, 0))) {
+                message.append(&c, 1);
+                count += 1;
+                if ('\r' == c) {
+                    switch (state) {
+                    case start: state = cr; break;
+                    case cr: break;
+                    case crlf: state = crlfcr; break;
+                    case crlfcr: state = cr; break;
+                    }
+                } else {
+                    if ('\n' == c) {
+                        switch (state) {
+                        case start: state = start; break;
+                        case cr: state = crlf; break;
+                        case crlf: state = start; break;
+                        case crlfcr: return count; break;
+                        }
+                    } else {
+                        state = start;
+                    }
+                }
+            }
+        } while (0 < (amount));
+        return count;
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -137,6 +196,7 @@ protected:
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
 protected:
+    char_string client_message_, server_message_, message_;
     network::sockets::ip::tcp::transport tcp_;
     network::sockets::ip::udp::transport udp_;
 

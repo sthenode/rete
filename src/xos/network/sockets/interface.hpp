@@ -102,6 +102,38 @@ public:
         }
         return false;
     }
+    virtual bool bind(const endpoint& ep) {
+        sockaddr_t* addr = 0;
+        socklen_t addrlen = 0;
+        if ((addr = ep.socket_address(addrlen))) {
+            if ((this->bind(addr, addrlen))) {
+                return true;
+            }
+        }
+        return false;
+    }
+    virtual bool listen(const endpoint& ep) {
+        sockaddr_t* addr = 0;
+        socklen_t addrlen = 0;
+        if ((addr = ep.socket_address(addrlen))) {
+            if ((this->bind(addr, addrlen))) {
+                if ((this->listen())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    virtual bool accept(interface_implemented& sk, const endpoint& ep) {
+        sockaddr_t* addr = 0;
+        socklen_t addrlen = 0;
+        if ((addr = ep.socket_address(addrlen))) {
+            if ((this->accept(sk, addr, addrlen))) {
+                return true;
+            }
+        }
+        return false; 
+    }
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
@@ -276,6 +308,37 @@ public:
         }
         return false; 
     }
+    using implements::bind;
+    virtual bool bind(const sockaddr_t* addr, socklen_t addrlen) {
+        attached_t detached = ((attached_t)unattached);
+        if (((attached_t)unattached) != (detached = this->attached_to())) {
+            if ((bind_detached(detached, addr, addrlen))) {
+                return true;
+            }
+        }
+        return false; 
+    }
+    using implements::accept;
+    virtual bool accept
+    (interface_implemented& sock, sockaddr_t* addr, socklen_t& addrlen) {
+        attached_t detached = ((attached_t)unattached);
+        if (((attached_t)unattached) != (detached = this->attached_to())) {
+            if ((accept_detached(detached, sock, addr, addrlen))) {
+                return true;
+            }
+        }
+        return false; 
+    }
+    using implements::listen;
+    virtual bool listen(backlog_t backlog) { 
+        attached_t detached = ((attached_t)unattached);
+        if (((attached_t)unattached) != (detached = this->attached_to())) {
+            if ((listen_detached(detached, backlog))) {
+                return true;
+            }
+        }
+        return false; 
+    }
     
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
@@ -327,22 +390,39 @@ public:
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
     virtual bool connect_detached
-    (attached_t detached, const sockaddr_t* addr, socklen_t addrlen) {
+    (attached_t detached, const sockaddr_t* addr, socklen_t addrlen) const {
         if (((attached_t)unattached) != (detached)) {
         }
         return false;
+    }
+    virtual bool bind_detached
+    (attached_t detached, const sockaddr_t* addr, socklen_t addrlen) const {
+        if (((attached_t)unattached) != (detached)) {
+        }
+        return false; 
+    }
+    virtual bool accept_detached
+    (attached_t detached, interface_implemented& sock, sockaddr_t* addr, socklen_t& addrlen) const {
+        if (((attached_t)unattached) != (detached)) {
+        }
+        return false; 
+    }
+    virtual bool listen_detached(attached_t detached, backlog_t backlog) const { 
+        if (((attached_t)unattached) != (detached)) {
+        }
+        return false; 
     }
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
     virtual ssize_t send_detached
-    (attached_t detached, const void* buf, size_t len, send_flags_t flags) {
+    (attached_t detached, const void* buf, size_t len, send_flags_t flags) const {
         if (((attached_t)unattached) != (detached)) {
         }
         return -1;
     }
     virtual ssize_t recv_detached
-    (attached_t detached, void* buf, size_t len, recv_flags_t flags) {
+    (attached_t detached, void* buf, size_t len, recv_flags_t flags) const {
         if (((attached_t)unattached) != (detached)) {
         }
         return -1;
