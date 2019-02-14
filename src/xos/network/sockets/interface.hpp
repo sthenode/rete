@@ -64,6 +64,8 @@ typedef address_family_t domain_t;
 typedef transport_type_t type_t;
 typedef transport_protocol_t protocol_t;
 
+static const bool bind_as_reuseaddr_default = true;
+
 class _EXPORT_CLASS interface;
 class _EXPORT_CLASS interface_implemented;
 ///////////////////////////////////////////////////////////////////////
@@ -173,8 +175,72 @@ public:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    virtual ssize_t send(const void* buf, size_t len, send_flags_t flags) {
+        return -1;
+    }
+    virtual ssize_t recv(void* buf, size_t len, recv_flags_t flags) {
+        return -1;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual bool set_reuseaddr_opt(bool on = true) {
+        return false;
+    }
+    virtual bool set_noreuseaddr_opt(bool on = true) {
+        return false;
+    }
+    virtual bool get_reuseaddr_opt(bool &on) const {
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual bool set_delay_opt(bool on = true) {
+        return false;
+    }
+    virtual bool set_nodelay_opt(bool on = true) {
+        return false;
+    }
+    virtual bool get_delay_opt(bool &on) const {
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual bool set_linger_opt
+    (bool on = true, linger_seconds_t linger_seconds = -1) {
+        return false;
+    }
+    virtual bool set_dont_linger_opt
+    (bool on = true, linger_seconds_t linger_seconds = -1) {
+        return false;
+    }
+    virtual bool get_linger_opt(bool &on, linger_seconds_t &linger_seconds) const {
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual bool set_opt
+    (opt_level_t level, opt_name_t name, const void* value, socklen_t length) {
+        return false;
+    }
+    virtual bool get_opt
+    (opt_level_t level, opt_name_t name, void* value, socklen_t &length) const {
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     virtual backlog_t default_backlog() const {
         return backlog_default;
+    }
+    virtual linger_seconds_t default_linger_seconds() const {
+        return linger_seconds_default;
+    }
+    virtual bool bind_as_reuseaddr() const {
+        return bind_as_reuseaddr_default;
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -363,6 +429,25 @@ public:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    virtual bool set_opt
+    (opt_level_t level, opt_name_t name, const void* value, socklen_t length) {
+        attached_t detached = ((attached_t)unattached);
+        if (((attached_t)unattached) != (detached = this->attached_to())) {
+            return set_opt_detached(detached, level, name, value, length);
+        }
+        return false;
+    }
+    virtual bool get_opt
+    (opt_level_t level, opt_name_t name, void* value, socklen_t &length) const {
+        attached_t detached = ((attached_t)unattached);
+        if (((attached_t)unattached) != (detached = this->attached_to())) {
+            return get_opt_detached(detached, level, name, value, length);
+        }
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     virtual attached_t open_attached(domain_t domain, type_t type, protocol_t protocol) {
         attached_t detached = ((attached_t)unattached);
         if ((this->closed())) {
@@ -426,6 +511,21 @@ public:
         if (((attached_t)unattached) != (detached)) {
         }
         return -1;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual bool set_opt_detached
+    (attached_t detached, opt_level_t level, opt_name_t name, const void* value, socklen_t length) {
+        if ((((attached_t)unattached) != (detached)) && (value) && (0 < length)) {
+        }
+        return false;
+    }
+    virtual bool get_opt_detached
+    (attached_t detached, opt_level_t level, opt_name_t name, void* value, socklen_t &length) const {
+        if ((((attached_t)unattached) != (detached)) && (value)) {
+        }
+        return false;
     }
 
     ///////////////////////////////////////////////////////////////////////

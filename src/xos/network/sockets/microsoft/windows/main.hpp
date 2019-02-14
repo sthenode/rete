@@ -16,63 +16,45 @@
 ///   File: main.hpp
 ///
 /// Author: $author$
-///   Date: 2/6/2019
+///   Date: 2/13/2019
 ///////////////////////////////////////////////////////////////////////
-#ifndef _XOS_APP_CONSOLE_RETE_MAIN_HPP
-#define _XOS_APP_CONSOLE_RETE_MAIN_HPP
+#ifndef _XOS_NETWORK_SOCKETS_MICROSOFT_WINDOWS_MAIN_HPP
+#define _XOS_NETWORK_SOCKETS_MICROSOFT_WINDOWS_MAIN_HPP
 
-#include "xos/mt/os/mutex.hpp"
-#include "xos/mt/os/semaphore.hpp"
 #include "xos/mt/std/queue.hpp"
-#include "xos/network/address.hpp"
-#include "xos/network/sockets/address.hpp"
-#include "xos/network/sockets/ip/address.hpp"
-#include "xos/network/sockets/ip/v4/address.hpp"
-#include "xos/network/sockets/ip/v6/address.hpp"
-#include "xos/network/transport.hpp"
-#include "xos/network/sockets/transport.hpp"
-#include "xos/network/sockets/ip/transport.hpp"
 #include "xos/network/sockets/ip/tcp/transport.hpp"
-#include "xos/network/sockets/ip/udp/transport.hpp"
-#include "xos/network/endpoint.hpp"
-#include "xos/network/sockets/endpoint.hpp"
-#include "xos/network/sockets/ip/endpoint.hpp"
 #include "xos/network/sockets/ip/v4/endpoint.hpp"
-#include "xos/network/sockets/ip/v6/endpoint.hpp"
-#include "xos/network/interface.hpp"
-#include "xos/network/sockets/interface.hpp"
-#include "xos/network/sockets/os/interface.hpp"
-#include "xos/console/lib/version/main.hpp"
-#include "xos/lib/rete/version.hpp"
+#include "xos/network/sockets/microsoft/windows/interface.hpp"
+#include "xos/console/getopt/main.hpp"
 
 namespace xos {
-namespace app {
-namespace console {
-namespace rete {
+namespace network {
+namespace sockets {
+namespace microsoft {
+namespace windows {
 
-typedef xos::console::lib::version::maint_implements maint_implements;
-typedef xos::console::lib::version::maint<xos::lib::rete::version> maint_extends;
+typedef xos::console::getopt::main::implements main_implements;
+typedef xos::console::getopt::main main_extends;
 ///////////////////////////////////////////////////////////////////////
-///  Class: maint
+///  Class: main
 ///////////////////////////////////////////////////////////////////////
-template 
-<class TImplements = maint_implements, class TExtends = maint_extends>
-class _EXPORT_CLASS maint: virtual public TImplements, public TExtends {
+class _EXPORT_CLASS main: virtual public main_implements, public main_extends {
 public:
-    typedef TImplements implements;
-    typedef TExtends extends;
+    typedef main_implements implements;
+    typedef main_extends extends;
     typedef maint derives;
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
-    maint()
-    : client_message_("GET / HTTP/1.0\r\n\r\n"), 
+    main()
+    : run_(0),
+      client_message_("GET / HTTP/1.0\r\n\r\n"), 
       server_message_("HTTP/1.0 200 OK\r\n\r\nOK\r\n") {
     }
-    virtual ~maint() {
+    virtual ~main() {
     }
 private:
-    maint(const maint &copy) {
+    main(const main &copy) {
     }
 
 protected:
@@ -83,20 +65,20 @@ protected:
         if ((run_)) {
             return (this->*run_)(argc, argv, env);
         }
-        return default_run(argc, argv, env);
+        return server_run(argc, argv, env);
     }
     virtual int server_run(int argc, char_t** argv, char_t** env) {
         int err = 0;
         network::sockets::ip::v4::endpoint ep(8080);
         network::sockets::ip::tcp::transport tp;
-        network::sockets::os::interface sk;
+        network::sockets::microsoft::windows::interface sk;
 
         if ((sk.open(tp))) {
 
             if ((sk.bind(ep))) {
                 
                 if ((sk.listen())) {
-                    network::sockets::os::interface cn;
+                    network::sockets::microsoft::windows::interface cn;
                     
                     if ((sk.accept(cn, ep))) {
                         ssize_t count = 0;
@@ -113,35 +95,9 @@ protected:
         }
         return err;
     }
-    virtual int client_run(int argc, char_t** argv, char_t** env) {
-        int err = 0;
-        network::sockets::ip::v4::endpoint ep("localhost", 80);
-        network::sockets::ip::tcp::transport tp;
-        network::sockets::os::interface sk;
-
-        if ((sk.open(tp))) {
-
-            if ((sk.connect(ep))) {
-                ssize_t count = 0;
-
-                if (0 < (count = sk.send(client_message_.chars(), client_message_.length(), 0))) {
-                    if (0 < (count = recv_message(message_, sk))) {
-                        this->out(message_.chars());
-                    }
-                }
-                sk.shutdown();
-            }
-            sk.close();
-        }
-        return err;
-    }
-    virtual int default_run(int argc, char_t** argv, char_t** env) {
-        int err = 0;
-        if (!(err = extends::run(argc, argv, env))) {
-            server_run(argc, argv, env);
-        }
-        return err;
-    }
+    
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     virtual ssize_t recv_message
     (char_string& message, network::sockets::interface& sk) {
         enum { start, cr, crlf, crlfcr } state = start;
@@ -179,32 +135,14 @@ protected:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
-    virtual network::transport& transport() const {
-        return default_transport();
-    }
-    virtual network::transport& tcp_transport() const {
-        return (network::transport&)tcp_;
-    }
-    virtual network::transport& udp_transport() const {
-        return (network::transport&)udp_;
-    }
-    virtual network::transport& default_transport() const {
-        return tcp_transport();
-    }
-
-    ///////////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////
 protected:
     char_string client_message_, server_message_, message_;
-    network::sockets::ip::tcp::transport tcp_;
-    network::sockets::ip::udp::transport udp_;
+}; /// class _EXPORT_CLASS main
 
-}; /// class _EXPORT_CLASS maint
-typedef maint<> main;
-
-} /// namespace rete
-} /// namespace console
-} /// namespace app
+} /// namespace windows
+} /// namespace microsoft
+} /// namespace sockets
+} /// namespace network
 } /// namespace xos
 
-#endif /// _XOS_APP_CONSOLE_RETE_MAIN_HPP 
+#endif /// _XOS_NETWORK_SOCKETS_MICROSOFT_WINDOWS_MAIN_HPP 
