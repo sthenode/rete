@@ -1,0 +1,62 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "app", "app", "{45DF03B5-D248-4B4F-8191-8F518778150E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{97BFDCDA-48B2-4B7A-A877-66837459B6AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "properties", "properties", "{6B2929C7-28A5-4BAC-9AB8-F869FED9D8A7}"
+	ProjectSection(SolutionItems) = preProject
+		..\crono.vsprops = ..\crono.vsprops
+		..\fila.vsprops = ..\fila.vsprops
+		..\nadir.vsprops = ..\nadir.vsprops
+		..\rete.vsprops = ..\rete.vsprops
+		..\rostra.vsprops = ..\rostra.vsprops
+		..\vcproj.vsprops = ..\vcproj.vsprops
+		vcversion.vsprops = vcversion.vsprops
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "librete", "librete\librete.vcproj", "{3B3A9192-4826-41B8-BA44-5BFA6EC36EC3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wrete", "wrete\wrete.vcproj", "{29ECA714-753E-4766-A113-86141AC5E216}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rete", "rete\rete.vcproj", "{FEC1CA7A-AFD8-4322-AD17-CEB9D8CCC402}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3B3A9192-4826-41B8-BA44-5BFA6EC36EC3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3B3A9192-4826-41B8-BA44-5BFA6EC36EC3}.Debug|Win32.Build.0 = Debug|Win32
+		{3B3A9192-4826-41B8-BA44-5BFA6EC36EC3}.Debug|x64.ActiveCfg = Debug|Win32
+		{3B3A9192-4826-41B8-BA44-5BFA6EC36EC3}.Debug|x64.Build.0 = Debug|Win32
+		{3B3A9192-4826-41B8-BA44-5BFA6EC36EC3}.Release|Win32.ActiveCfg = Release|Win32
+		{3B3A9192-4826-41B8-BA44-5BFA6EC36EC3}.Release|Win32.Build.0 = Release|Win32
+		{3B3A9192-4826-41B8-BA44-5BFA6EC36EC3}.Release|x64.ActiveCfg = Release|x64
+		{3B3A9192-4826-41B8-BA44-5BFA6EC36EC3}.Release|x64.Build.0 = Release|x64
+		{29ECA714-753E-4766-A113-86141AC5E216}.Debug|Win32.ActiveCfg = Debug|Win32
+		{29ECA714-753E-4766-A113-86141AC5E216}.Debug|Win32.Build.0 = Debug|Win32
+		{29ECA714-753E-4766-A113-86141AC5E216}.Debug|x64.ActiveCfg = Debug|Win32
+		{29ECA714-753E-4766-A113-86141AC5E216}.Release|Win32.ActiveCfg = Release|Win32
+		{29ECA714-753E-4766-A113-86141AC5E216}.Release|Win32.Build.0 = Release|Win32
+		{29ECA714-753E-4766-A113-86141AC5E216}.Release|x64.ActiveCfg = Release|Win32
+		{FEC1CA7A-AFD8-4322-AD17-CEB9D8CCC402}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FEC1CA7A-AFD8-4322-AD17-CEB9D8CCC402}.Debug|Win32.Build.0 = Debug|Win32
+		{FEC1CA7A-AFD8-4322-AD17-CEB9D8CCC402}.Debug|x64.ActiveCfg = Debug|Win32
+		{FEC1CA7A-AFD8-4322-AD17-CEB9D8CCC402}.Release|Win32.ActiveCfg = Release|Win32
+		{FEC1CA7A-AFD8-4322-AD17-CEB9D8CCC402}.Release|Win32.Build.0 = Release|Win32
+		{FEC1CA7A-AFD8-4322-AD17-CEB9D8CCC402}.Release|x64.ActiveCfg = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{29ECA714-753E-4766-A113-86141AC5E216} = {45DF03B5-D248-4B4F-8191-8F518778150E}
+		{FEC1CA7A-AFD8-4322-AD17-CEB9D8CCC402} = {45DF03B5-D248-4B4F-8191-8F518778150E}
+		{3B3A9192-4826-41B8-BA44-5BFA6EC36EC3} = {97BFDCDA-48B2-4B7A-A877-66837459B6AF}
+	EndGlobalSection
+EndGlobal
