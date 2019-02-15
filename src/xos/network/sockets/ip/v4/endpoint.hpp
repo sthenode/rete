@@ -47,6 +47,13 @@ public:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    endpointt(const char_string& host, sockport_t port) {
+        if (!(this->attach(host, port))) {
+            attach_exception e(attach_failed);
+            IS_LOGGED_ERROR("...throwing attach_exception e(attach_failed)...");
+            throw (e);
+        }
+    }
     endpointt(const char* host, sockport_t port) {
         if (!(this->attach(host, port))) {
             attach_exception e(attach_failed);
