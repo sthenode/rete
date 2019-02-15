@@ -42,6 +42,7 @@
 #include "xos/network/interface.hpp"
 #include "xos/network/sockets/interface.hpp"
 #include "xos/network/sockets/os/interface.hpp"
+#include "xos/network/sockets/os/sockets.hpp"
 #include "xos/console/lib/version/main.hpp"
 #include "xos/lib/rete/version.hpp"
 
@@ -80,10 +81,17 @@ protected:
     ///////////////////////////////////////////////////////////////////////
     int (derives::*run_)(int argc, char_t** argv, char_t** env);
     virtual int run(int argc, char_t** argv, char_t** env) {
-        if ((run_)) {
-            return (this->*run_)(argc, argv, env);
+        int err = 0;
+        network::sockets::os::sockets sks;
+
+        if ((sks.startup())) {
+            if ((run_)) {
+                err = (this->*run_)(argc, argv, env);
+            }
+            err = default_run(argc, argv, env);
+            sks.cleanup();
         }
-        return default_run(argc, argv, env);
+        return err;
     }
     virtual int server_run(int argc, char_t** argv, char_t** env) {
         int err = 0;

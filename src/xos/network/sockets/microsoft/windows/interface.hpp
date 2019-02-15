@@ -63,6 +63,22 @@ public:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    using implements::bind;
+    virtual bool bind(const sockaddr_t* addr, socklen_t addrlen) {
+        attached_t detached = ((attached_t)unattached);
+        if (((attached_t)unattached) != (detached = this->attached_to())) {
+            if ((this->bind_as_reuseaddr())) {
+                this->set_reuseaddr_opt();
+            }
+            if ((bind_detached(detached, addr, addrlen))) {
+                return true;
+            }
+        }
+        return false; 
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     virtual bool set_reuseaddr_opt(bool on = true) {
         int value = (on)?(1):(0);
         IS_LOGGED_DEBUG("set_opt(SOL_SOCKET, SO_REUSEADDR, &value, sizeof(value))...");
@@ -160,7 +176,7 @@ public:
     virtual attached_t open_detached(domain_t domain, type_t type, protocol_t protocol) const {
         attached_t detached = ((attached_t)unattached);
         IS_LOGGED_DEBUG("::socket(domain = " << domain << ", type = " << type << ", protocol = " << protocol << ")...");
-        if (0 <= (detached = ::socket(domain, type, protocol))) {
+        if (((attached_t)unattached) != (detached = ::socket(domain, type, protocol))) {
             IS_LOGGED_DEBUG("..." << detached << " = ::socket(domain = " << domain << ", type = " << type << ", protocol = " << protocol << ")");
         } else {
             int error = WSAGetLastError();
@@ -238,7 +254,7 @@ public:
             attached_t accepted = ((attached_t)unattached);
             int err = 0;
             IS_LOGGED_DEBUG("::accept(..., addrlen = " << addrlen << ")...");
-            if (0 <= (accepted = ::accept(detached, addr, &addrlen))) {
+            if (((attached_t)unattached) != (accepted = ::accept(detached, addr, &addrlen))) {
                 IS_LOGGED_DEBUG("..." << accepted << " = ::accept(..., addrlen = " << addrlen << ")...");
                 if ((accepted_detached(accepted, sock, addr, addrlen))) {
                     return true;
