@@ -78,6 +78,7 @@ $${RETE_SRC}/xos/network/sockets/posix/interface.hpp \
 $${RETE_SRC}/xos/network/sockets/apple/osx/interface.hpp \
 $${RETE_SRC}/xos/network/sockets/microsoft/windows/os.hpp \
 $${RETE_SRC}/xos/network/sockets/microsoft/windows/interface.hpp \
+$${RETE_SRC}/xos/app/console/rete/main_opt.hpp \
 $${RETE_SRC}/xos/app/console/rete/main.hpp \
 
 # rete_exe SOURCES
@@ -89,6 +90,7 @@ $${RETE_SRC}/xos/network/sockets/ip/udp/transport.cpp \
 $${RETE_SRC}/xos/network/sockets/ip/v6/endpoint.cpp \
 $${RETE_SRC}/xos/network/sockets/microsoft/windows/os.cpp \
 $${RETE_SRC}/xos/network/sockets/microsoft/windows/interface.cpp \
+$${RETE_SRC}/xos/app/console/rete/main_opt.cpp \
 $${RETE_SRC}/xos/app/console/rete/main.cpp \
 
 ########################################################################
