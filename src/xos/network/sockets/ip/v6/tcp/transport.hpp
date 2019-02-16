@@ -13,32 +13,31 @@
 /// or otherwise) arising in any way out of the use of this software, 
 /// even if advised of the possibility of such damage.
 ///
-///   File: os.hpp
+///   File: transport.hpp
 ///
 /// Author: $author$
-///   Date: 2/8/2019
+///   Date: 2/16/2019
 ///////////////////////////////////////////////////////////////////////
-#ifndef _XOS_NETWORK_SOCKETS_POSIX_OS_HPP
-#define _XOS_NETWORK_SOCKETS_POSIX_OS_HPP
+#ifndef _XOS_NETWORK_SOCKETS_IP_V6_TCP_TRANSPORT_HPP
+#define _XOS_NETWORK_SOCKETS_IP_V6_TCP_TRANSPORT_HPP
 
-#include "xos/platform/platform.hpp"
-#include <sys/socket.h>
-
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-enum {
-    DELAY_OPT_OFF = 1, /// Note opposite of Windows
-    DELAY_OPT_ON  = 0  /// Note opposite of Windows
-};
+#include "xos/network/sockets/ip/v6/transport.hpp"
+#include "xos/network/sockets/ip/tcp/transport.hpp"
 
 namespace xos {
 namespace network {
 namespace sockets {
-namespace posix {
+namespace ip {
+namespace v6 {
+namespace tcp {
 
-} /// namespace posix
+typedef ip::tcp::transportt<ip::v6::transport> transport;
+
+} /// namespace tcp
+} /// namespace v6
+} /// namespace ip
 } /// namespace sockets
 } /// namespace network
 } /// namespace xos
 
-#endif /// _XOS_NETWORK_SOCKETS_POSIX_OS_HPP 
+#endif /// _XOS_NETWORK_SOCKETS_IP_V6_TCP_TRANSPORT_HPP 

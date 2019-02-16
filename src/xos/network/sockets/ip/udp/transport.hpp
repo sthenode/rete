@@ -29,7 +29,7 @@ namespace sockets {
 namespace ip {
 namespace udp {
 
-typedef ip::transport::implements transportt_implements;
+typedef ip::transport transportt_implements;
 typedef ip::extended::transport transportt_extends;
 ///////////////////////////////////////////////////////////////////////
 ///  Class: transportt

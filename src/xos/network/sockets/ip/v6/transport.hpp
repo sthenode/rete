@@ -16,10 +16,10 @@
 ///   File: transport.hpp
 ///
 /// Author: $author$
-///   Date: 2/6/2019
+///   Date: 2/16/2019
 ///////////////////////////////////////////////////////////////////////
-#ifndef _XOS_NETWORK_SOCKETS_IP_TCP_TRANSPORT_HPP
-#define _XOS_NETWORK_SOCKETS_IP_TCP_TRANSPORT_HPP
+#ifndef _XOS_NETWORK_SOCKETS_IP_V6_TRANSPORT_HPP
+#define _XOS_NETWORK_SOCKETS_IP_V6_TRANSPORT_HPP
 
 #include "xos/network/sockets/ip/transport.hpp"
 
@@ -27,19 +27,16 @@ namespace xos {
 namespace network {
 namespace sockets {
 namespace ip {
-namespace tcp {
+namespace v6 {
 
 typedef ip::transport transportt_implements;
-typedef ip::extended::transport transportt_extends;
 ///////////////////////////////////////////////////////////////////////
 ///  Class: transportt
 ///////////////////////////////////////////////////////////////////////
-template 
-<class TImplements = transportt_implements, class TExtends = transportt_extends>
-class _EXPORT_CLASS transportt: virtual public TImplements, public TExtends {
+template <class TImplements = transportt_implements>
+class _EXPORT_CLASS transportt: virtual public TImplements {
 public:
     typedef TImplements implements;
-    typedef TExtends extends;
 
     typedef typename implements::domain_t domain_t;
     typedef typename implements::type_t type_t;
@@ -47,20 +44,8 @@ public:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
-    transportt(const transportt &copy) {
-    }
-    transportt() {
-    }
-    virtual ~transportt() {
-    }
-
-    ///////////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////
-    virtual type_t type() const {
-        return SOCK_STREAM;
-    }
-    virtual protocol_t protocol() const {
-        return IPPROTO_TCP;
+    virtual domain_t domain() const {
+        return PF_INET6;
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -68,10 +53,10 @@ public:
 }; /// class _EXPORT_CLASS transportt
 typedef transportt<> transport;
 
-} /// namespace tcp
+} /// namespace v6
 } /// namespace ip
 } /// namespace sockets
 } /// namespace network
 } /// namespace xos
 
-#endif /// _XOS_NETWORK_SOCKETS_IP_TCP_TRANSPORT_HPP 
+#endif /// _XOS_NETWORK_SOCKETS_IP_V6_TRANSPORT_HPP 

@@ -34,6 +34,8 @@
 #include "xos/network/sockets/ip/transport.hpp"
 #include "xos/network/sockets/ip/tcp/transport.hpp"
 #include "xos/network/sockets/ip/udp/transport.hpp"
+#include "xos/network/sockets/ip/v6/tcp/transport.hpp"
+#include "xos/network/sockets/ip/v6/udp/transport.hpp"
 #include "xos/network/endpoint.hpp"
 #include "xos/network/sockets/endpoint.hpp"
 #include "xos/network/sockets/ip/endpoint.hpp"
@@ -72,7 +74,9 @@ public:
       client_host_("localhost"), server_host_(""),
       client_message_("GET / HTTP/1.0\r\n\r\n"), 
       server_message_("HTTP/1.0 200 OK\r\n\r\nOK\r\n"),
-      message_(0) {
+      message_(0), ip_transport_(0), 
+      ip_tcp_transport_(0), ip_udp_transport_(0), 
+      ip_endpoint_(0) {
     }
     virtual ~maint() {
     }
@@ -295,22 +299,53 @@ protected:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    network::sockets::ip::transport& (derives::*ip_transport_)() const;
     virtual network::sockets::ip::transport& ip_transport() const {
+        if ((ip_transport_)) {
+            return (this->*ip_transport_)();
+        }
         return default_ip_transport();
-    }
-    virtual network::sockets::ip::transport& tcp_transport() const {
-        return (network::sockets::ip::transport&)tcp_;
-    }
-    virtual network::sockets::ip::transport& udp_transport() const {
-        return (network::sockets::ip::transport&)udp_;
     }
     virtual network::sockets::ip::transport& default_ip_transport() const {
         return tcp_transport();
     }
+    network::sockets::ip::transport& (derives::*ip_tcp_transport_)() const;
+    virtual network::sockets::ip::transport& tcp_transport() const {
+        if ((ip_tcp_transport_)) {
+            return (this->*ip_tcp_transport_)();
+        }
+        return (network::sockets::ip::transport&)tcp_;
+    }
+    network::sockets::ip::transport& (derives::*ip_udp_transport_)() const;
+    virtual network::sockets::ip::transport& udp_transport() const {
+        if ((ip_udp_transport_)) {
+            return (this->*ip_udp_transport_)();
+        }
+        return (network::sockets::ip::transport&)udp_;
+    }
+    virtual network::sockets::ip::transport& ipv6_tcp_transport() const {
+        return (network::sockets::ip::transport&)ipv6_tcp_;
+    }
+    virtual network::sockets::ip::transport& ipv6_udp_transport() const {
+        return (network::sockets::ip::transport&)ipv6_udp_;
+    }
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    virtual void set_transport_tcp() {
+        ip_transport_ = &derives::tcp_transport;
+    }
+    virtual void set_transport_udp() {
+        ip_transport_ = &derives::udp_transport;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    network::sockets::ip::endpoint& (derives::*ip_endpoint_)() const;
     virtual network::sockets::ip::endpoint& ip_endpoint() const {
+        if ((ip_endpoint_)) {
+            return (this->*ip_endpoint_)();
+        }
         return default_ip_endpoint();
     }
     virtual network::sockets::ip::endpoint& ipv4_endpoint() const {
@@ -321,6 +356,22 @@ protected:
     }
     virtual network::sockets::ip::endpoint& default_ip_endpoint() const {
         return ipv4_endpoint();
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual void set_family_ipv4() {
+        ip_tcp_transport_ = 0;
+        ip_udp_transport_ = 0;
+        ip_endpoint_ = &derives::ipv4_endpoint;
+    }
+    virtual void set_family_ipv6() {
+        ip_tcp_transport_ = &derives::ipv6_tcp_transport;
+        ip_udp_transport_ = &derives::ipv6_udp_transport;
+        ip_endpoint_ = &derives::ipv6_endpoint;
+    }
+    virtual void set_family_local() {
+        ip_endpoint_ = 0;
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -380,6 +431,52 @@ protected:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    virtual int on_family_option
+    (int optval, const char_t* optarg,
+     const char_t* optname, int optind,
+     int argc, char_t**argv, char_t**env) {
+        int err = 0;
+        if ((optarg) && (optarg[0])) {
+            if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV4[1] != optarg[0]))
+                || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV4+3, optarg))) {
+                set_family_ipv4();
+            } else {
+                if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV6[1] != optarg[0]))
+                    || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV6+3, optarg))) {
+                    set_family_ipv6();
+                } else {
+                    if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_LOCAL[1] != optarg[0]))
+                        || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_LOCAL+3, optarg))) {
+                        set_family_local();
+                    } else {
+                    }
+                }
+            }
+        }
+        return err;
+    }
+    virtual int on_transport_option
+    (int optval, const char_t* optarg,
+     const char_t* optname, int optind,
+     int argc, char_t**argv, char_t**env) {
+        int err = 0;
+        if ((optarg) && (optarg[0])) {
+            if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_TCP[1] != optarg[0]))
+                || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_TCP+3, optarg))) {
+                set_transport_tcp();
+            } else {
+                if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_UDP[1] != optarg[0]))
+                    || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_UDP+3, optarg))) {
+                    set_transport_udp();
+                } else {
+                }
+            }
+        }
+        return err;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
 protected:
     unsigned client_port_, server_port_;
     char_string client_host_, server_host_;
@@ -388,6 +485,8 @@ protected:
     network::sockets::ip::udp::transport udp_;
     network::sockets::ip::v4::endpoint ipv4_;
     network::sockets::ip::v6::endpoint ipv6_;
+    network::sockets::ip::v6::tcp::transport ipv6_tcp_;
+    network::sockets::ip::v6::udp::transport ipv6_udp_;
 }; /// class _EXPORT_CLASS maint
 typedef maint<> main;
 

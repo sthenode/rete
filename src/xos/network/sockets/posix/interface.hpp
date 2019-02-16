@@ -21,6 +21,7 @@
 #ifndef _XOS_NETWORK_SOCKETS_POSIX_INTERFACE_HPP
 #define _XOS_NETWORK_SOCKETS_POSIX_INTERFACE_HPP
 
+#include "xos/network/sockets/posix/os.hpp"
 #include "xos/network/sockets/interface.hpp"
 
 namespace xos {
@@ -57,6 +58,116 @@ public:
     interfacet() {
     }
     virtual ~interfacet() {
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    using implements::bind;
+    virtual bool bind(const sockaddr_t* addr, socklen_t addrlen) {
+        attached_t detached = ((attached_t)unattached);
+        if (((attached_t)unattached) != (detached = this->attached_to())) {
+            if ((this->bind_as_reuseaddr())) {
+                this->set_reuseaddr_opt();
+            }
+            if ((bind_detached(detached, addr, addrlen))) {
+                return true;
+            }
+        }
+        return false; 
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual bool set_reuseaddr_opt(bool on = true) {
+        int value = (on)?(1):(0);
+        IS_LOGGED_DEBUG("set_opt(SOL_SOCKET, SO_REUSEADDR, &value, sizeof(value))...");
+        if ((this->set_opt(SOL_SOCKET, SO_REUSEADDR, &value, sizeof(value)))) {
+            return true;
+        }
+        return false;
+    }
+    virtual bool set_noreuseaddr_opt(bool on = true) {
+        int value = (on)?(0):(1);
+        IS_LOGGED_DEBUG("set_opt(SOL_SOCKET, SO_REUSEADDR, &value, sizeof(value))...");
+        if ((this->set_opt(SOL_SOCKET, SO_REUSEADDR, &value, sizeof(value)))) {
+            return true;
+        }
+        return false;
+    }
+    virtual bool get_reuseaddr_opt(bool &on) const {
+        int value = 0;
+        socklen_t length = sizeof(value);
+        IS_LOGGED_DEBUG("get_opt(SOL_SOCKET, SO_REUSEADDR, &value, length)...");
+        if ((this->get_opt(SOL_SOCKET, SO_REUSEADDR, &value, length))) {
+            on = (value != 0);
+            return true;
+        }
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual bool set_delay_opt(bool on = true) {
+        int value = (on)?(DELAY_OPT_ON):(DELAY_OPT_OFF); /// Note opposite of Windows
+        IS_LOGGED_DEBUG("set_opt(IPPROTO_TCP, TCP_NODELAY, &value, sizeof(value))...");
+        if ((this->set_opt(IPPROTO_TCP, TCP_NODELAY, &value, sizeof(value)))) {
+            return true;
+        }
+        return false;
+    }
+    virtual bool set_nodelay_opt(bool on = true) {
+        int value = (on)?(DELAY_OPT_OFF):(DELAY_OPT_ON); /// Note opposite of Windows
+        IS_LOGGED_DEBUG("set_opt(IPPROTO_TCP, TCP_NODELAY, &value, sizeof(value))...");
+        if ((this->set_opt(IPPROTO_TCP, TCP_NODELAY, &value, sizeof(value)))) {
+            return true;
+        }
+        return false;
+    }
+    virtual bool get_delay_opt(bool &on) const {
+        int value = 0;
+        socklen_t length = sizeof(value);
+        IS_LOGGED_DEBUG("get_opt(IPPROTO_TCP, TCP_NODELAY, &value, length))...");
+        if ((this->get_opt(IPPROTO_TCP, TCP_NODELAY, &value, length))) {
+            on = (value == 0);
+            return true;
+        }
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual bool set_linger_opt
+    (bool on = true, linger_seconds_t linger_seconds = -1) {
+        struct linger value;
+        value.l_onoff = (on)?(1):(0);
+        value.l_linger = (0>linger_seconds)?(this->default_linger_seconds()):(linger_seconds);
+        IS_LOGGED_DEBUG("set_opt(SOL_SOCKET, SO_LINGER, &value, sizeof(value))...");
+        if ((this->set_opt(SOL_SOCKET, SO_LINGER, &value, sizeof(value)))) {
+            return true;
+        }
+        return false;
+    }
+    virtual bool set_dont_linger_opt
+    (bool on = true, linger_seconds_t linger_seconds = -1) {
+        struct linger value;
+        value.l_onoff = (on)?(0):(1);
+        value.l_linger = (0>linger_seconds)?(this->default_linger_seconds()):(linger_seconds);
+        IS_LOGGED_DEBUG("set_opt(SOL_SOCKET, SO_LINGER, &value, sizeof(value))...");
+        if ((this->set_opt(SOL_SOCKET, SO_LINGER, &value, sizeof(value)))) {
+            return true;
+        }
+        return false;
+    }
+    virtual bool get_linger_opt(bool &on, linger_seconds_t &linger_seconds) const {
+        struct linger value = {0, 0};
+        socklen_t length = sizeof(value);
+        IS_LOGGED_DEBUG("get_opt(SOL_SOCKET, SO_LINGER, &value, length)...");
+        if ((this->get_opt(SOL_SOCKET, SO_LINGER, &value, length))) {
+            on = (value.l_onoff == 0);
+            linger_seconds = (value.l_linger);
+            return true;
+        }
+        return false;
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -201,6 +312,37 @@ public:
             }
         }
         return -1;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual bool set_opt_detached
+    (attached_t detached, opt_level_t level, opt_name_t name, const void* value, socklen_t length) {
+        if ((((attached_t)unattached) != (detached)) && (value) && (0 < length)) {
+            int err = 0;
+            IS_LOGGED_DEBUG("::setsockopt(..., level = " << level << ", name = " << name << ", ..., length)...");
+            if (!(err = ::setsockopt(detached, level, name, (const char*)value, length))) {
+                IS_LOGGED_DEBUG("...setsockopt(..., level = " << level << ", name = " << name << ", ..., length)...");
+                return true;
+            } else {
+                IS_LOGGED_ERROR("...failed errno = " << errno << " on ::setsockopt(..., level = " << level << ", name = " << name << ", ..., length)");
+            }
+        }
+        return false;
+    }
+    virtual bool get_opt_detached
+    (attached_t detached, opt_level_t level, opt_name_t name, void* value, socklen_t &length) const {
+        if ((((attached_t)unattached) != (detached)) && (value)) {
+            int err = 0;
+            IS_LOGGED_DEBUG("::getsockopt(..., level = " << level << ", name = " << name << ", ..., length)...");
+            if (!(err = ::getsockopt(detached, level, name, (char*)value, &length))) {
+                IS_LOGGED_DEBUG("...::getsockopt(..., level = " << level << ", name = " << name << ", ..., length)...");
+                return true;
+            } else {
+                IS_LOGGED_ERROR("...failed errno = " << errno << " on ::getsockopt(..., level = " << level << ", name = " << name << ", ..., length)");
+            }
+        }
+        return false;
     }
 
     ///////////////////////////////////////////////////////////////////////

@@ -94,6 +94,7 @@ public:
     }
     virtual sockaddr_attached_t attach(sockport_t port) {
         memset(&socket_address_, 0, this->socket_address_len_ = (this->socket_address_len()));
+        socket_address_.sin6_len = this->socket_address_len_;
         socket_address_.sin6_family = this->family();
         socket_address_.sin6_addr = in6addr_any;
         socket_address_.sin6_port = htons(this->socket_address_port_ = port);

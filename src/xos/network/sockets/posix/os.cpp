@@ -25,7 +25,6 @@ namespace network {
 namespace sockets {
 namespace posix {
 
-
 } /// namespace posix
 } /// namespace sockets
 } /// namespace network
