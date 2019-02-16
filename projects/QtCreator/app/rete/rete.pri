@@ -64,6 +64,9 @@ $${RETE_SRC}/xos/network/sockets/transport.hpp \
 $${RETE_SRC}/xos/network/sockets/ip/transport.hpp \
 $${RETE_SRC}/xos/network/sockets/ip/tcp/transport.hpp \
 $${RETE_SRC}/xos/network/sockets/ip/udp/transport.hpp \
+$${RETE_SRC}/xos/network/sockets/ip/v6/transport.hpp \
+$${RETE_SRC}/xos/network/sockets/ip/v6/tcp/transport.hpp \
+$${RETE_SRC}/xos/network/sockets/ip/v6/udp/transport.hpp \
 $${RETE_SRC}/xos/network/endpoint.hpp \
 $${RETE_SRC}/xos/network/sockets/endpoint.hpp \
 $${RETE_SRC}/xos/network/sockets/ip/endpoint.hpp \
@@ -75,6 +78,7 @@ $${RETE_SRC}/xos/network/sockets/os/os.hpp \
 $${RETE_SRC}/xos/network/sockets/os/interface.hpp \
 $${RETE_SRC}/xos/network/sockets/posix/os.hpp \
 $${RETE_SRC}/xos/network/sockets/posix/interface.hpp \
+$${RETE_SRC}/xos/network/sockets/apple/osx/os.hpp \
 $${RETE_SRC}/xos/network/sockets/apple/osx/interface.hpp \
 $${RETE_SRC}/xos/network/sockets/microsoft/windows/os.hpp \
 $${RETE_SRC}/xos/network/sockets/microsoft/windows/interface.hpp \
@@ -86,10 +90,10 @@ $${RETE_SRC}/xos/app/console/rete/main.hpp \
 rete_exe_SOURCES += \
 $${RETE_SRC}/xos/network/sockets.cpp \
 $${RETE_SRC}/xos/network/sockets/ip/v6/address.cpp \
-$${RETE_SRC}/xos/network/sockets/ip/udp/transport.cpp \
+$${RETE_SRC}/xos/network/sockets/ip/v6/udp/transport.cpp \
 $${RETE_SRC}/xos/network/sockets/ip/v6/endpoint.cpp \
-$${RETE_SRC}/xos/network/sockets/microsoft/windows/os.cpp \
-$${RETE_SRC}/xos/network/sockets/microsoft/windows/interface.cpp \
+$${RETE_SRC}/xos/network/sockets/posix/os.cpp \
+$${RETE_SRC}/xos/network/sockets/posix/interface.cpp \
 $${RETE_SRC}/xos/app/console/rete/main_opt.cpp \
 $${RETE_SRC}/xos/app/console/rete/main.cpp \
 
