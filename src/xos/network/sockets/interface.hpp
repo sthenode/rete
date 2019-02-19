@@ -136,6 +136,29 @@ public:
         }
         return false; 
     }
+    
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual ssize_t sendto
+    (const void* buf, size_t len, send_flags_t flags, const endpoint& ep) {
+        sockaddr_t* addr = 0;
+        socklen_t addrlen = 0;
+        if ((addr = ep.socket_address(addrlen))) {
+            ssize_t count = this->sendto(buf, len, flags, addr, addrlen);
+            return count;
+        }
+        return -1;
+    }
+    virtual ssize_t recvfrom
+    (void* buf, size_t len, send_flags_t flags, const endpoint& ep) {
+        sockaddr_t* addr = 0;
+        socklen_t addrlen = 0;
+        if ((addr = ep.recv_socket_address(addrlen))) {
+            ssize_t count = this->recvfrom(buf, len, flags, addr, &addrlen);
+            return count;
+        }
+        return -1;
+    }
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
@@ -179,6 +202,19 @@ public:
         return -1;
     }
     virtual ssize_t recv(void* buf, size_t len, recv_flags_t flags) {
+        return -1;
+    }
+    
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual ssize_t sendto
+    (const void* buf, size_t len, send_flags_t flags,
+     const sockaddr_t* addr, socklen_t addrlen) {
+        return -1;
+    }
+    virtual ssize_t recvfrom
+    (void* buf, size_t len, recv_flags_t flags,
+     sockaddr_t* addr, socklen_t* addrlen) {
         return -1;
     }
 
@@ -429,6 +465,31 @@ public:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    using implements::sendto;
+    virtual ssize_t sendto
+    (const void* buf, size_t len, send_flags_t flags,
+     const sockaddr_t* addr, socklen_t addrlen) {
+        attached_t detached = ((attached_t)unattached);
+        if (((attached_t)unattached) != (detached = this->attached_to())) {
+            ssize_t count = this->sendto_detached(detached, buf, len, flags, addr, addrlen);
+            return count;
+        }
+        return -1;
+    }
+    using implements::recvfrom;
+    virtual ssize_t recvfrom
+    (void* buf, size_t len, recv_flags_t flags,
+     sockaddr_t* addr, socklen_t* addrlen) {
+        attached_t detached = ((attached_t)unattached);
+        if (((attached_t)unattached) != (detached = this->attached_to())) {
+            ssize_t count = this->recvfrom_detached(detached, buf, len, flags, addr, addrlen);
+            return count;
+        }
+        return -1;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     virtual bool set_opt
     (opt_level_t level, opt_name_t name, const void* value, socklen_t length) {
         attached_t detached = ((attached_t)unattached);
@@ -502,13 +563,32 @@ public:
     ///////////////////////////////////////////////////////////////////////
     virtual ssize_t send_detached
     (attached_t detached, const void* buf, size_t len, send_flags_t flags) const {
-        if (((attached_t)unattached) != (detached)) {
+        if ((((attached_t)unattached) != (detached)) && (buf) && (len)) {
         }
         return -1;
     }
     virtual ssize_t recv_detached
     (attached_t detached, void* buf, size_t len, recv_flags_t flags) const {
-        if (((attached_t)unattached) != (detached)) {
+        if ((((attached_t)unattached) != (detached)) && (buf) && (len)) {
+        }
+        return -1;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual ssize_t sendto_detached
+    (attached_t detached, const void* buf, size_t len, send_flags_t flags,
+     const sockaddr_t* addr, socklen_t addrlen) {
+        if ((((attached_t)unattached) != (detached)) 
+            && (buf) && (len) && (addr) && (addrlen)) {
+        }
+        return -1;
+    }
+    virtual ssize_t recvfrom_detached
+    (attached_t detached, void* buf, size_t len, recv_flags_t flags,
+     sockaddr_t* addr, socklen_t* addrlen) {
+        if ((((attached_t)unattached) != (detached)) 
+            && (buf) && (len) && (addr) && (addrlen)) {
         }
         return -1;
     }

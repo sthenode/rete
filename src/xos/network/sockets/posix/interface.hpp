@@ -316,6 +316,41 @@ public:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    virtual ssize_t sendto_detached
+    (attached_t detached, const void* buf, size_t len, send_flags_t flags,
+     const sockaddr_t* addr, socklen_t addrlen) {
+        if ((((attached_t)unattached) != (detached)) 
+            && (buf) && (len) && (addr) && (addrlen)) {
+            ssize_t count = 0;
+            IS_LOGGED_DEBUG("::sendto(..., len = " << len << ", flags = " << flags << ")...");
+            if (0 <= (count = ::sendto(detached, buf, len, flags, addr, addrlen))) {
+                IS_LOGGED_DEBUG("..." << count << " = ::sendto(..., len = " << len << ", flags = " << flags << ")...");
+                return count;
+            } else {
+                IS_LOGGED_ERROR("...failed errno = " << errno << " on ::sendto(..., len = " << len << ", flags = " << flags << ")");
+            }
+        }
+        return -1;
+    }
+    virtual ssize_t recvfrom_detached
+    (attached_t detached, void* buf, size_t len, recv_flags_t flags,
+     sockaddr_t* addr, socklen_t* addrlen) {
+        if ((((attached_t)unattached) != (detached)) 
+            && (buf) && (len) && (addr) && (addrlen)) {
+            ssize_t count = 0;
+            IS_LOGGED_DEBUG("::recvfrom(..., len = " << len << ", flags = " << flags << ")...");
+            if (0 <= (count = ::recvfrom(detached, buf, len, flags, addr, addrlen))) {
+                IS_LOGGED_DEBUG("..." << count << " = ::recvfrom(..., len = " << len << ", flags = " << flags << ")...");
+                return count;
+            } else {
+                IS_LOGGED_ERROR("...failed errno = " << errno << " on ::recvfrom(..., len = " << len << ", flags = " << flags << ")");
+            }
+        }
+        return -1;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     virtual bool set_opt_detached
     (attached_t detached, opt_level_t level, opt_name_t name, const void* value, socklen_t length) {
         if ((((attached_t)unattached) != (detached)) && (value) && (0 < length)) {

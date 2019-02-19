@@ -131,6 +131,8 @@ protected:
     virtual int default_sockets_client_run(int argc, char_t** argv, char_t** env) {
         return tcp_client_run(argc, argv, env);
     }
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     virtual int tcp_client_run(int argc, char_t** argv, char_t** env) {
         int err = 0;
         network::sockets::ip::endpoint& ep = this->ip_endpoint();
@@ -145,12 +147,41 @@ protected:
                     ssize_t count = 0;
     
                     if (0 < (count = sk.send(client_message_.chars(), client_message_.length(), 0))) {
-                        if (0 < (count = recv_message(recved_message_, sk))) {
+                        if (0 < (count = tcp_recv_message(recved_message_, sk))) {
                             this->out(recved_message_.chars());
                         }
                     }
                     sk.shutdown();
                 }
+                sk.close();
+            }
+            ep.detach();
+        }
+        return err;
+    }
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual int udp_client_run(int argc, char_t** argv, char_t** env) {
+        int err = 0;
+        network::sockets::ip::endpoint& ep = this->ip_endpoint();
+        network::sockets::ip::transport& tp = this->udp_transport();
+        network::sockets::os::interface sk;
+
+        if ((ep.attach(client_host_, client_port_))) {
+
+            if ((sk.open(tp))) {
+                const char_t* chars = client_message_.chars();
+                ssize_t size = client_message_.length();
+                ssize_t count = 0;
+    
+                do {
+                    if (0 < (count = sk.sendto(chars, size, 0, ep))) {
+                        this->out(chars, count);
+                        this->out_flush();
+                        chars += count;
+                        size -= count;
+                    }
+                } while ((0 < count) && (0 < size));
                 sk.close();
             }
             ep.detach();
@@ -170,6 +201,8 @@ protected:
     virtual int default_sockets_server_run(int argc, char_t** argv, char_t** env) {
         return tcp_server_run(argc, argv, env);
     }
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     virtual int tcp_server_run(int argc, char_t** argv, char_t** env) {
         int err = 0;
         network::sockets::ip::endpoint& ep = this->ip_endpoint();
@@ -188,7 +221,7 @@ protected:
                         if ((sk.accept(cn, ep))) {
                             ssize_t count = 0;
                             
-                            if (0 < (count = recv_message(recved_message_, cn))) {
+                            if (0 < (count = tcp_recv_message(recved_message_, cn))) {
                                 this->out(recved_message_.chars());                            
                                 count = cn.send(server_message_.chars(), server_message_.length(), 0);
                             }
@@ -202,10 +235,40 @@ protected:
         }
         return err;
     }
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual int udp_server_run(int argc, char_t** argv, char_t** env) {
+        int err = 0;
+        network::sockets::ip::endpoint& ep = this->ip_endpoint();
+        network::sockets::ip::transport& tp = this->udp_transport();
+        network::sockets::os::interface sk;
+
+        if ((ep.attach(server_host_, server_port_))) {
+
+            if ((sk.open(tp))) {
+    
+                if ((sk.bind(ep))) {
+                    char_t* chars = chars_;
+                    size_t size = sizeof(chars_);
+                    ssize_t count = 0;
+                    
+                    do {
+                        if (0 < (count = sk.recvfrom(chars, size, 0, ep))) {
+                            this->out(chars_, count);
+                            this->out_flush();
+                        }
+                    } while (size <= (count));
+                }
+                sk.close();
+            }
+            ep.detach();
+        }
+        return err;
+    }
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
-    virtual ssize_t recv_message
+    virtual ssize_t tcp_recv_message
     (char_string& message, network::sockets::interface& sk) {
         enum { start, cr, crlf, crlfcr } state = start;
         ssize_t amount = 0, count = 0;
@@ -309,6 +372,8 @@ protected:
     virtual network::sockets::ip::transport& default_ip_transport() const {
         return tcp_transport();
     }
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     network::sockets::ip::transport& (derives::*ip_tcp_transport_)() const;
     virtual network::sockets::ip::transport& tcp_transport() const {
         if ((ip_tcp_transport_)) {
@@ -316,15 +381,17 @@ protected:
         }
         return (network::sockets::ip::transport&)tcp_;
     }
+    virtual network::sockets::ip::transport& ipv6_tcp_transport() const {
+        return (network::sockets::ip::transport&)ipv6_tcp_;
+    }
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     network::sockets::ip::transport& (derives::*ip_udp_transport_)() const;
     virtual network::sockets::ip::transport& udp_transport() const {
         if ((ip_udp_transport_)) {
             return (this->*ip_udp_transport_)();
         }
         return (network::sockets::ip::transport&)udp_;
-    }
-    virtual network::sockets::ip::transport& ipv6_tcp_transport() const {
-        return (network::sockets::ip::transport&)ipv6_tcp_;
     }
     virtual network::sockets::ip::transport& ipv6_udp_transport() const {
         return (network::sockets::ip::transport&)ipv6_udp_;
@@ -333,9 +400,13 @@ protected:
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
     virtual void set_transport_tcp() {
+        sockets_client_run_ = &derives::tcp_client_run;
+        sockets_server_run_ = &derives::tcp_server_run;
         ip_transport_ = &derives::tcp_transport;
     }
     virtual void set_transport_udp() {
+        sockets_client_run_ = &derives::udp_client_run;
+        sockets_server_run_ = &derives::udp_server_run;
         ip_transport_ = &derives::udp_transport;
     }
 
@@ -437,16 +508,16 @@ protected:
      int argc, char_t**argv, char_t**env) {
         int err = 0;
         if ((optarg) && (optarg[0])) {
-            if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV4[1] != optarg[0]))
-                || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV4+3, optarg))) {
+            if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV4[3] != optarg[0]))
+                || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV4, optarg))) {
                 set_family_ipv4();
             } else {
-                if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV6[1] != optarg[0]))
-                    || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV6+3, optarg))) {
+                if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV6[3] != optarg[0]))
+                    || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_IPV6, optarg))) {
                     set_family_ipv6();
                 } else {
-                    if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_LOCAL[1] != optarg[0]))
-                        || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_LOCAL+3, optarg))) {
+                    if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_LOCAL[0] != optarg[0]))
+                        || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTARG_LOCAL, optarg))) {
                         set_family_local();
                     } else {
                     }
@@ -461,12 +532,12 @@ protected:
      int argc, char_t**argv, char_t**env) {
         int err = 0;
         if ((optarg) && (optarg[0])) {
-            if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_TCP[1] != optarg[0]))
-                || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_TCP+3, optarg))) {
+            if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_TCP[0] != optarg[0]))
+                || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_TCP, optarg))) {
                 set_transport_tcp();
             } else {
-                if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_UDP[1] != optarg[0]))
-                    || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_UDP+3, optarg))) {
+                if (!((optarg[1]) || (XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_UDP[0] != optarg[0]))
+                    || !(chars_t::compare(XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTARG_UDP, optarg))) {
                     set_transport_udp();
                 } else {
                 }
@@ -487,6 +558,7 @@ protected:
     network::sockets::ip::v6::endpoint ipv6_;
     network::sockets::ip::v6::tcp::transport ipv6_tcp_;
     network::sockets::ip::v6::udp::transport ipv6_udp_;
+    char_t chars_[4096];
 }; /// class _EXPORT_CLASS maint
 typedef maint<> main;
 

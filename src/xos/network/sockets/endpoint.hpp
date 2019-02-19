@@ -139,6 +139,10 @@ public:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    virtual sockaddr_attached_t recv_socket_address(socklen_t& len) const {
+        len = this->socket_address_len();
+        return 0;
+    }
     virtual sockaddr_attached_t socket_address(socklen_t& len) const {
         len = this->socket_address_len();
         return this->attached_to();
