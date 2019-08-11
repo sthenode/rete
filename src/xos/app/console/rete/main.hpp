@@ -21,9 +21,6 @@
 #ifndef _XOS_APP_CONSOLE_RETE_MAIN_HPP
 #define _XOS_APP_CONSOLE_RETE_MAIN_HPP
 
-#include "xos/mt/os/mutex.hpp"
-#include "xos/mt/os/semaphore.hpp"
-#include "xos/mt/std/queue.hpp"
 #include "xos/network/address.hpp"
 #include "xos/network/sockets/address.hpp"
 #include "xos/network/sockets/ip/address.hpp"
@@ -34,6 +31,8 @@
 #include "xos/network/sockets/ip/transport.hpp"
 #include "xos/network/sockets/ip/tcp/transport.hpp"
 #include "xos/network/sockets/ip/udp/transport.hpp"
+#include "xos/network/sockets/ip/v4/tcp/transport.hpp"
+#include "xos/network/sockets/ip/v4/udp/transport.hpp"
 #include "xos/network/sockets/ip/v6/tcp/transport.hpp"
 #include "xos/network/sockets/ip/v6/udp/transport.hpp"
 #include "xos/network/endpoint.hpp"
@@ -133,6 +132,19 @@ protected:
     }
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    int (derives::*sockets_server_run_)(int argc, char_t** argv, char_t** env);
+    virtual int sockets_server_run(int argc, char_t** argv, char_t** env) {
+        if ((sockets_server_run_)) {
+            return (this->*sockets_server_run_)(argc, argv, env);
+        }
+        return default_sockets_server_run(argc, argv, env);
+    }
+    virtual int default_sockets_server_run(int argc, char_t** argv, char_t** env) {
+        return tcp_server_run(argc, argv, env);
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     virtual int tcp_client_run(int argc, char_t** argv, char_t** env) {
         int err = 0;
         network::sockets::ip::endpoint& ep = this->ip_endpoint();
@@ -189,18 +201,6 @@ protected:
         return err;
     }
 
-    ///////////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////
-    int (derives::*sockets_server_run_)(int argc, char_t** argv, char_t** env);
-    virtual int sockets_server_run(int argc, char_t** argv, char_t** env) {
-        if ((sockets_server_run_)) {
-            return (this->*sockets_server_run_)(argc, argv, env);
-        }
-        return default_sockets_server_run(argc, argv, env);
-    }
-    virtual int default_sockets_server_run(int argc, char_t** argv, char_t** env) {
-        return tcp_server_run(argc, argv, env);
-    }
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
     virtual int tcp_server_run(int argc, char_t** argv, char_t** env) {
@@ -372,6 +372,7 @@ protected:
     virtual network::sockets::ip::transport& default_ip_transport() const {
         return tcp_transport();
     }
+
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
     network::sockets::ip::transport& (derives::*ip_tcp_transport_)() const;
@@ -380,6 +381,9 @@ protected:
             return (this->*ip_tcp_transport_)();
         }
         return (network::sockets::ip::transport&)tcp_;
+    }
+    virtual network::sockets::ip::transport& ipv4_tcp_transport() const {
+        return (network::sockets::ip::transport&)ipv4_tcp_;
     }
     virtual network::sockets::ip::transport& ipv6_tcp_transport() const {
         return (network::sockets::ip::transport&)ipv6_tcp_;
@@ -392,6 +396,9 @@ protected:
             return (this->*ip_udp_transport_)();
         }
         return (network::sockets::ip::transport&)udp_;
+    }
+    virtual network::sockets::ip::transport& ipv4_udp_transport() const {
+        return (network::sockets::ip::transport&)ipv4_udp_;
     }
     virtual network::sockets::ip::transport& ipv6_udp_transport() const {
         return (network::sockets::ip::transport&)ipv6_udp_;
@@ -432,8 +439,8 @@ protected:
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
     virtual void set_family_ipv4() {
-        ip_tcp_transport_ = 0;
-        ip_udp_transport_ = 0;
+        ip_tcp_transport_ = &derives::ipv4_tcp_transport;
+        ip_udp_transport_ = &derives::ipv4_udp_transport;
         ip_endpoint_ = &derives::ipv4_endpoint;
     }
     virtual void set_family_ipv6() {
@@ -555,6 +562,8 @@ protected:
     network::sockets::ip::tcp::transport tcp_;
     network::sockets::ip::udp::transport udp_;
     network::sockets::ip::v4::endpoint ipv4_;
+    network::sockets::ip::v4::tcp::transport ipv4_tcp_;
+    network::sockets::ip::v4::udp::transport ipv4_udp_;
     network::sockets::ip::v6::endpoint ipv6_;
     network::sockets::ip::v6::tcp::transport ipv6_tcp_;
     network::sockets::ip::v6::udp::transport ipv6_udp_;
