@@ -44,6 +44,8 @@
 #include "xos/network/sockets/interface.hpp"
 #include "xos/network/sockets/os/interface.hpp"
 #include "xos/network/sockets/os/sockets.hpp"
+#include "xos/io/network/sockets/interface/reader.hpp"
+#include "xos/io/network/sockets/interface/writer.hpp"
 #include "xos/app/console/rete/main_opt.hpp"
 
 namespace xos {
@@ -51,13 +53,14 @@ namespace app {
 namespace console {
 namespace rete {
 
-typedef main_opt_implements maint_implements;
-typedef main_opt maint_extends;
 ///////////////////////////////////////////////////////////////////////
 ///  Class: maint
 ///////////////////////////////////////////////////////////////////////
 template 
-<class TImplements = maint_implements, class TExtends = maint_extends>
+<class TVersion = xos::lib::rete::version,
+ class TExtends = main_optt<TVersion>, 
+ class TImplements = typename TExtends::implements>
+
 class _EXPORT_CLASS maint: virtual public TImplements, public TExtends {
 public:
     typedef TImplements implements;
@@ -158,9 +161,9 @@ protected:
                 if ((sk.connect(ep))) {
                     ssize_t count = 0;
     
-                    if (0 < (count = sk.send(client_message_.chars(), client_message_.length(), 0))) {
-                        if (0 < (count = tcp_recv_message(recved_message_, sk))) {
-                            this->out(recved_message_.chars());
+                    if (0 < (count = tcp_send_request_message(client_message_, sk))) {
+                        if (0 < (count = tcp_recv_response_message(recved_message_, sk))) {
+                            on_tcp_recv_response_message(recved_message_, sk);
                         }
                     }
                     sk.shutdown();
@@ -221,9 +224,9 @@ protected:
                         if ((sk.accept(cn, ep))) {
                             ssize_t count = 0;
                             
-                            if (0 < (count = tcp_recv_message(recved_message_, cn))) {
-                                this->out(recved_message_.chars());                            
-                                count = cn.send(server_message_.chars(), server_message_.length(), 0);
+                            if (0 < (count = tcp_recv_request_message(recved_message_, cn))) {
+                                on_tcp_recv_request_message(recved_message_, cn);                      
+                                count = tcp_send_response_message(server_message_, cn); 
                             }
                             cn.close();
                         }
@@ -268,15 +271,98 @@ protected:
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
+    virtual ssize_t tcp_send_request_message
+    (char_string& message, network::sockets::interface& sk) {
+        io::network::sockets::interface::char_writer writer(sk);
+        return tcp_write_request_message(message, writer);
+    }
+    virtual ssize_t tcp_write_request_message
+    (char_string& message, io::char_writer& writer) {
+        return tcp_write_message(message, writer);
+    }
+    virtual ssize_t tcp_send_response_message
+    (char_string& message, network::sockets::interface& sk) {
+        io::network::sockets::interface::char_writer writer(sk);
+        return tcp_write_response_message(message, writer);
+    }
+    virtual ssize_t tcp_write_response_message
+    (char_string& message, io::char_writer& writer) {
+        return tcp_write_message(message, writer);
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual void on_tcp_recv_request_message
+    (char_string& message, network::sockets::interface& sk) {
+        io::network::sockets::interface::char_reader reader(sk);
+        on_tcp_read_request_message(message, reader);
+    }
+    virtual void on_tcp_read_request_message
+    (char_string& message, io::char_reader& reader) {
+        this->out(message.chars());
+    }
+    virtual ssize_t tcp_recv_request_message
+    (char_string& message, network::sockets::interface& sk) {
+        io::network::sockets::interface::char_reader reader(sk);
+        return tcp_read_request_message(message, reader);
+    }
+    virtual ssize_t tcp_read_request_message
+    (char_string& message, io::char_reader& reader) {
+        return tcp_read_message(message, reader);
+    }
+    virtual void on_tcp_recv_response_message
+    (char_string& message, network::sockets::interface& sk) {
+        io::network::sockets::interface::char_reader reader(sk);
+        on_tcp_read_response_message(message, reader);
+    }
+    virtual void on_tcp_read_response_message
+    (char_string& message, io::char_reader& reader) {
+        this->out(message.chars());
+    }
+    virtual ssize_t tcp_recv_response_message
+    (char_string& message, network::sockets::interface& sk) {
+        io::network::sockets::interface::char_reader reader(sk);
+        return tcp_read_request_message(message, reader);
+    }
+    virtual ssize_t tcp_read_response_message
+    (char_string& message, io::char_reader& reader) {
+        return tcp_read_message(message, reader);
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual ssize_t tcp_send_message
+    (char_string& message, network::sockets::interface& sk) {
+        io::network::sockets::interface::char_writer writer(sk);
+        return tcp_write_message(message, writer);
+    }
+    virtual ssize_t tcp_write_message
+    (char_string& message, io::char_writer& writer) {
+        const char* chars = 0;
+        size_t length = 0;
+        ssize_t count = 0;
+        if ((chars = message.has_chars(length))) {
+            count = writer.write(chars, length);
+        }
+        return count;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     virtual ssize_t tcp_recv_message
     (char_string& message, network::sockets::interface& sk) {
+        io::network::sockets::interface::char_reader reader(sk);
+        return tcp_read_message(message, reader);
+    }
+    virtual ssize_t tcp_read_message
+    (char_string& message, io::char_reader& reader) {
         enum { start, cr, crlf, crlfcr } state = start;
         ssize_t amount = 0, count = 0;
         char_t c = 0;
 
         message.clear();
         do {
-            if (0 < (amount = sk.recv(&c, 1, 0))) {
+            if (0 < (amount = reader.read(&c, 1))) {
                 message.append(&c, 1);
                 count += 1;
                 if ('\r' == c) {

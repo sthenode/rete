@@ -21,7 +21,7 @@
 #ifndef _XOS_APP_CONSOLE_RETE_MAIN_OPT_HPP
 #define _XOS_APP_CONSOLE_RETE_MAIN_OPT_HPP
 
-#include "xos/console/lib/version/main.hpp"
+#include "xos/app/console/main.hpp"
 #include "xos/lib/rete/version.hpp"
 
 ///////////////////////////////////////////////////////////////////////
@@ -145,7 +145,7 @@
    XOS_APP_CONSOLE_RETE_MAIN_PORT_OPTVAL_S \
    XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTVAL_S \
    XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTVAL_S \
-   XOS_CONSOLE_MAIN_OPTIONS_CHARS
+   XOS_APP_CONSOLE_MAIN_OPTIONS_CHARS
 
 #define XOS_APP_CONSOLE_RETE_MAIN_OPTIONS_OPTIONS \
    XOS_APP_CONSOLE_RETE_MAIN_CLIENT_OPTION \
@@ -154,7 +154,7 @@
    XOS_APP_CONSOLE_RETE_MAIN_PORT_OPTION \
    XOS_APP_CONSOLE_RETE_MAIN_FAMILY_OPTION \
    XOS_APP_CONSOLE_RETE_MAIN_TRANSPORT_OPTION \
-   XOS_CONSOLE_MAIN_OPTIONS_OPTIONS
+   XOS_APP_CONSOLE_MAIN_OPTIONS_OPTIONS
 
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -169,25 +169,28 @@ namespace app {
 namespace console {
 namespace rete {
 
-typedef xos::console::lib::version::maint_implements main_opt_implements;
-typedef xos::console::lib::version::maint<xos::lib::rete::version> main_opt_extends;
 ///////////////////////////////////////////////////////////////////////
-///  Class: main_opt
+///  Class: main_optt
 ///////////////////////////////////////////////////////////////////////
-class _EXPORT_CLASS main_opt: virtual public main_opt_implements, public main_opt_extends {
+template 
+<class TVersion = xos::lib::rete::version,
+ class TExtends = xos::app::console::maint<TVersion>, 
+ class TImplements = typename TExtends::implements>
+
+class _EXPORT_CLASS main_optt: virtual public TImplements, public TExtends {
 public:
-    typedef main_opt_implements implements;
-    typedef main_opt_extends extends;
+    typedef TImplements implements;
+    typedef TExtends extends;
 
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
-private:
-    main_opt(const main_opt &copy) {
-    }
 public:
-    main_opt() {
+    main_optt() {
     }
-    virtual ~main_opt() {
+    virtual ~main_optt() {
+    }
+private:
+    main_optt(const main_optt &copy) {
     }
 
 protected:
@@ -334,6 +337,7 @@ protected:
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
 }; /// class _EXPORT_CLASS main_opt
+typedef main_optt<> main_opt;
 
 } /// namespace rete
 } /// namespace console
