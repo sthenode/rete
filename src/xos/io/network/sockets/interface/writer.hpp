@@ -21,8 +21,9 @@
 #ifndef _XOS_IO_NETWORK_SOCKETS_INTERFACE_WRITER_HPP
 #define _XOS_IO_NETWORK_SOCKETS_INTERFACE_WRITER_HPP
 
-#include "xos/io/writer.hpp"
 #include "xos/network/sockets/interface.hpp"
+#include "xos/io/writer.hpp"
+#include "xos/io/logger.hpp"
 
 namespace xos {
 namespace io {
@@ -55,7 +56,12 @@ public:
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
     virtual ssize_t write(const what_t* what, size_t size) {
-        ssize_t count = send(this->sock(), what, size*sizeof(sized_t));
+        ssize_t count = 0;
+        if (1 < (sizeof(sized_t))) {
+            LOG_ERROR("...failed unsupported sizeof(sized_t) = " << sizeof(sized_t));
+            return -1;
+        }
+        count = send(this->sock(), what, size);
         return count;
     }
     virtual ssize_t send(::xos::network::sockets::interface& sock, const void* what, size_t size) {

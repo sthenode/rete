@@ -21,8 +21,9 @@
 #ifndef _XOS_IO_NETWORK_SOCKETS_INTERFACE_READER_HPP
 #define _XOS_IO_NETWORK_SOCKETS_INTERFACE_READER_HPP
 
-#include "xos/io/reader.hpp"
 #include "xos/network/sockets/interface.hpp"
+#include "xos/io/reader.hpp"
+#include "xos/io/logger.hpp"
 
 namespace xos {
 namespace io {
@@ -57,7 +58,14 @@ public:
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
     virtual ssize_t read(what_t* what, size_t size) {
-        ssize_t count = recv(this->sock(), what, size*sizeof(sized_t));
+        ssize_t count = 0;
+        if (1 < (sizeof(sized_t))) {
+            LOG_ERROR("...failed unsupported sizeof(sized_t) = " << sizeof(sized_t));
+            return -1;
+        }
+        if (1 > (count = recv(this->sock(), what, size))) {
+            return count;
+        }
         return count;
     }
     virtual ssize_t recv(::xos::network::sockets::interface& sock, void* what, size_t size) {
@@ -79,6 +87,59 @@ protected:
 
 typedef readert<> reader;
 typedef readert<io::char_reader> char_reader;
+
+namespace size {
+///////////////////////////////////////////////////////////////////////
+///  Class: readert
+///////////////////////////////////////////////////////////////////////
+template 
+<class TExtends = interface::reader, class TImplements = typename TExtends::implements>
+
+class _EXPORT_CLASS readert: virtual public TImplements, public TExtends {
+public:
+    typedef TImplements implements;
+    typedef TExtends extends;
+
+    typedef implements reader_t;
+    typedef typename reader_t::what_t what_t;
+    typedef typename reader_t::sized_t sized_t;
+    
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    readert(const readert &copy): extends(copy) {
+    }
+    readert(::xos::network::sockets::interface& sock): extends(sock) {
+    }
+    virtual ~readert() {
+    }
+    
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual ssize_t read(what_t* what, size_t size) {
+        ssize_t count = 0, amount = 0;
+        if (1 < (sizeof(sized_t))) {
+            LOG_ERROR("...failed unsupported sizeof(sized_t) = " << sizeof(sized_t));
+            return -1;
+        }
+        do { 
+            if (0 < (amount = this->recv(this->sock(), what, size))) {
+                count += amount;
+                size -= amount;
+            } else {
+                if (0 > (amount)) {
+                    return amount;
+                }
+            }
+        } while ((0 <= amount) && (size));
+        return count;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+}; /// class _EXPORT_CLASS readert
+typedef readert<> reader;
+typedef readert<interface::char_reader> char_reader;
+} /// namespace size
 
 } /// namespace interface
 } /// namespace sockets

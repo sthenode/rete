@@ -65,17 +65,17 @@ public:
         return this->attach(port);
     }
     virtual sockaddr_attached_t attach_first(const char* host, sockport_t port) {
-        if ((host) && (host[0])) {
+        if ((host) && (host[0]) && (('*' != host[0]) || (0 != host[1]))) {
             return this->attach(host, first_addrindex, port); }
         return this->attach(port);
     }
     virtual sockaddr_attached_t attach_last(const char* host, sockport_t port) {
-        if ((host) && (host[0])) {
+        if ((host) && (host[0]) && (('*' != host[0]) || (0 != host[1]))) {
             return this->attach(host, last_addrindex, port); }
         return this->attach(port);
     }
     virtual sockaddr_attached_t attach(const char* host, sockport_t port) {
-        if ((host) && (host[0])) {
+        if ((host) && (host[0]) && (('*' != host[0]) || (0 != host[1]))) {
             return this->attach(host, first_addrindex, port); }
         return this->attach(port);
     }
