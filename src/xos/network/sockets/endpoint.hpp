@@ -46,6 +46,10 @@ class _EXPORT_CLASS endpointt: virtual public TImplements {
 public:
     typedef TImplements implements;
     
+    typedef typename implements::attached_t attached_t;
+    typedef typename implements::unattached_t unattached_t;
+    enum { unattached = implements::unattached };
+
     ///////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////
     using implements::attach;
@@ -97,7 +101,7 @@ public:
             IS_LOGGED_DEBUG("...getaddrinfo(\"" << host << "\",...) family = " << family);
             for (addr_i = 0, addr = addrs; addr; addr = addr->ai_next) {
                 const address_family_t addrfamily = addr->ai_family;
-                char addrhost[NI_MAXHOST];
+                /*char addrhost[NI_MAXHOST];
 
                 IS_LOGGED_DEBUG("getnameinfo(...)... family = " << addrfamily);
                 if (!(err = getnameinfo
@@ -105,17 +109,17 @@ public:
 
                     addrhost[sizeof(addrhost)-1] = 0;
                     IS_LOGGED_DEBUG("...getnameinfo(..., addrhost = \"" << addrhost << "\",...)");
-                    if (family == (addrfamily)) {
-                        if ((addr_i == index) || ((last_addrindex == index) && !(addr->ai_next))) {
-                            IS_LOGGED_DEBUG("...found family " << family << " address[" << addr_i << "]");
-                            saddr = this->attach(addr->ai_addr, addr->ai_addrlen, port);
-                            break;
-                        } else {
-                            ++addr_i;
-                        }
-                    }
                 } else {
                     IS_LOGGED_ERROR("...failed " << this->last_error() << " on getnameinfo(...)");
+                }*/
+                if (family == (addrfamily)) {
+                    if ((addr_i == index) || ((last_addrindex == index) && !(addr->ai_next))) {
+                        IS_LOGGED_DEBUG("...found family " << family << " address[" << addr_i << "]");
+                        saddr = this->attach(addr->ai_addr, addr->ai_addrlen, port);
+                        break;
+                    } else {
+                        ++addr_i;
+                    }
                 }
             }
             freeaddrinfo(addrs);
@@ -134,6 +138,28 @@ public:
         return 0;
     }
     virtual sockaddr_attached_t attach(const char* path) {
+        return 0;
+    }
+    
+    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    virtual const char* host_name(char* addrhost, socklen_t addrhostlen) const {
+        if ((addrhost) && (1 < addrhostlen)) {
+            attached_t saddr = 0; socklen_t saddrlen = 0;
+
+            if ((saddr = socket_address(saddrlen)) && (0 < saddrlen)) {
+                int err = 0;
+
+                IS_LOGGED_DEBUG("getnameinfo(...)...");
+                if (!(err = getnameinfo(saddr, saddrlen, addrhost, addrhostlen-1, 0, 0, 0))) {
+                    addrhost[addrhostlen-1] = 0;
+                    IS_LOGGED_DEBUG("...getnameinfo(..., addrhost = \"" << addrhost << "\",...)");
+                    return addrhost;
+                } else {
+                    IS_LOGGED_ERROR("...failed " << this->last_error() << " on getnameinfo(...)");
+                }
+            }
+        }
         return 0;
     }
 

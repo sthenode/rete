@@ -288,10 +288,11 @@ public:
     virtual ssize_t send_detached
     (attached_t detached, const void* buf, size_t len, send_flags_t flags) const {
         if (((attached_t)unattached) != (detached)) {
+            bool is_debug = (len >= this->send_debug_size_threashold());
             ssize_t count = 0;
-            IS_LOGGED_DEBUG("::send(..., len = " << len << ", flags = " << flags << ")...");
+            IS_LOGGED_DEBUG_TRACE(is_debug, "::send(..., len = " << len << ", flags = " << flags << ")...");
             if (0 <= (count = ::send(detached, buf, len, flags))) {
-                IS_LOGGED_DEBUG("..." << count << " = ::send(..., len = " << len << ", flags = " << flags << ")...");
+                IS_LOGGED_DEBUG_TRACE(is_debug, "..." << count << " = ::send(..., len = " << len << ", flags = " << flags << ")...");
                 return count;
             } else {
                 IS_LOGGED_ERROR("...failed errno = " << errno << " on ::end(..., len = " << len << ", flags = " << flags << ")");
@@ -302,10 +303,11 @@ public:
     virtual ssize_t recv_detached
     (attached_t detached, void* buf, size_t len, recv_flags_t flags) const {
         if (((attached_t)unattached) != (detached)) {
+            bool is_debug = (len >= this->recv_debug_size_threashold());
             ssize_t count = 0;
-            IS_LOGGED_DEBUG("::recv(..., len = " << len << ", flags = " << flags << ")...");
+            IS_LOGGED_DEBUG_TRACE(is_debug, "::recv(..., len = " << len << ", flags = " << flags << ")...");
             if (0 <= (count = ::recv(detached, buf, len, flags))) {
-                IS_LOGGED_DEBUG("..." << count << " = ::recv(..., len = " << len << ", flags = " << flags << ")...");
+                IS_LOGGED_DEBUG_TRACE(is_debug, "..." << count << " = ::recv(..., len = " << len << ", flags = " << flags << ")...");
                 return count;
             } else {
                 IS_LOGGED_ERROR("...failed errno = " << errno << " on ::recv(..., len = " << len << ", flags = " << flags << ")");
